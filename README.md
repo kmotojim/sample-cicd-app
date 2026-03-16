@@ -47,10 +47,12 @@ ArgoCD → prod 環境にデプロイ
 
 本プロジェクトは **2つの Gitea リポジトリ** で構成されます:
 
-| リポジトリ | 内容 | ブランチ |
-|-----------|------|---------|
-| `sample-cicd-app` (本リポジトリ) | C++ ソースコード | main |
-| [`sample-cicd-app-manifests`](https://github.com/kmotojim/sample-cicd-app-manifests) | K8s マニフェスト、ArgoCD、Tekton (CI + スモークテスト) | develop, main |
+
+| リポジトリ                                                                                | 内容                                      | ブランチ          |
+| ------------------------------------------------------------------------------------ | --------------------------------------- | ------------- |
+| `sample-cicd-app` (本リポジトリ)                                                           | C++ ソースコード                              | main          |
+| `[sample-cicd-app-manifests](https://github.com/kmotojim/sample-cicd-app-manifests)` | K8s マニフェスト、ArgoCD、Tekton (CI + スモークテスト) | develop, main |
+
 
 ## 技術スタック
 
@@ -66,16 +68,18 @@ ArgoCD → prod 環境にデプロイ
 
 ## API エンドポイント
 
-| メソッド | パス | 説明 |
-|---------|------|------|
-| GET | `/health` | ヘルスチェック |
-| GET | `/api/vehicle/state` | 車両状態取得 |
-| POST | `/api/vehicle/accelerate` | 加速 |
-| POST | `/api/vehicle/decelerate` | 減速 |
-| POST | `/api/vehicle/gear/{P\|R\|N\|D}` | ギア変更 |
-| POST | `/api/vehicle/seatbelt/{true\|false}` | シートベルト |
-| POST | `/api/vehicle/engine-error/{true\|false}` | エンジン異常 |
-| POST | `/api/vehicle/reset` | リセット |
+
+| メソッド | パス                                       | 説明      |
+| ---- | ---------------------------------------- | ------- |
+| GET  | `/health`                                | ヘルスチェック |
+| GET  | `/api/vehicle/state`                     | 車両状態取得  |
+| POST | `/api/vehicle/accelerate`                | 加速      |
+| POST | `/api/vehicle/decelerate`                | 減速      |
+| POST | `/api/vehicle/gear/{P|R|N|D}`            | ギア変更    |
+| POST | `/api/vehicle/seatbelt/{true|false}`     | シートベルト  |
+| POST | `/api/vehicle/engine-error/{true|false}` | エンジン異常  |
+| POST | `/api/vehicle/reset`                     | リセット    |
+
 
 ---
 
@@ -108,28 +112,33 @@ oc get csv -n openshift-operators | grep devspaces
 - **API トークン** を発行済みであること（CI パイプラインからの push や PR 作成で使用）
 
 トークンの発行方法:
+
 1. Gitea Web UI → 右上のユーザーアイコン → **「設定」**
 2. **「アプリケーション」** タブを開く
 3. トークン名（例: `cicd-pipeline`）を入力
 4. **権限を選択** で以下を設定:
 
-| カテゴリ | 権限 | 用途 |
-|---------|------|------|
-| **リポジトリ (repository)** | **読み取りと書き込み** | CI パイプラインからマニフェストリポへの `git push` |
-| **Issue (issue)** | **読み取りと書き込み** | スモークテストから develop → main の PR 作成・既存 PR 確認 |
 
-5. **「トークンを生成」** をクリック
-6. 表示されたトークンを控えておく（**この画面でしか確認できません**。後の Step 2, Step 5 で使用）
+| カテゴリ                   | 権限            | 用途                                        |
+| ---------------------- | ------------- | ----------------------------------------- |
+| **リポジトリ (repository)** | **読み取りと書き込み** | CI パイプラインからマニフェストリポへの `git push`          |
+| **Issue (issue)**      | **読み取りと書き込み** | スモークテストから develop → main の PR 作成・既存 PR 確認 |
+
+
+1. **「トークンを生成」** をクリック
+2. 表示されたトークンを控えておく（**この画面でしか確認できません**。後の Step 2, Step 5 で使用）
 
 ### 必要なコンテナイメージ
 
 エアギャップ環境では、以下のイメージがミラーレジストリに必要です:
 
-| イメージ | 用途 |
-|---------|------|
-| `registry.access.redhat.com/ubi9/ubi:latest` | ビルドステージ |
-| `registry.access.redhat.com/ubi9/ubi-minimal:latest` | ランタイムステージ |
-| `registry.redhat.io/devspaces/udi-rhel9:latest` | DevSpaces UDI ベース (C++ ツール追加用) |
+
+| イメージ                                                 | 用途                             |
+| ---------------------------------------------------- | ------------------------------ |
+| `registry.access.redhat.com/ubi9/ubi:latest`         | ビルドステージ                        |
+| `registry.access.redhat.com/ubi9/ubi-minimal:latest` | ランタイムステージ                      |
+| `registry.redhat.io/devspaces/udi-rhel9:latest`      | DevSpaces UDI ベース (C++ ツール追加用) |
+
 
 ---
 
@@ -152,8 +161,8 @@ cd sample-cicd-app
 
 Gitea の Web UI から以下の2つの **空リポジトリ** を作成します（README の初期化はしない）:
 
-1. **`sample-cicd-app`** (ソースコード用)
-2. **`sample-cicd-app-manifests`** (マニフェスト用)
+1. `**sample-cicd-app`** (ソースコード用)
+2. `**sample-cicd-app-manifests**` (マニフェスト用)
 
 > **注意**: push 時に認証を求められます。Gitea のユーザー名と、前提条件で発行した **API トークン（パスワードの代わり）** を使用してください。
 
@@ -204,13 +213,15 @@ cd ..
 
 デプロイ前に、プレースホルダーを実際の値に置き換えます:
 
-| プレースホルダー | 説明 | 例 |
-|----------------|------|-----|
-| `<GITEA_HOST>` | Gitea のホスト名 | `gitea.apps.example.com` |
-| `<MIRROR_REGISTRY>` | ミラーレジストリのアドレス | `registry.apps.example.com` |
-| `<NAMESPACE>` | Tekton リソースの namespace | `sample-cicd-pipeline` |
-| `<APP_ROUTE_HOST>` | dev 環境アプリの Route ホスト | `smart-mobility-dashboard-sample-cicd-dev.apps.example.com` |
-| `<GITEA_OWNER>` | Gitea のリポジトリオーナー | `myuser` |
+
+| プレースホルダー            | 説明                     | 例                                                           |
+| ------------------- | ---------------------- | ----------------------------------------------------------- |
+| `<GITEA_HOST>`      | Gitea のホスト名            | `gitea.apps.example.com`                                    |
+| `<MIRROR_REGISTRY>` | ミラーレジストリのアドレス          | `registry.apps.example.com`                                 |
+| `<NAMESPACE>`       | Tekton リソースの namespace | `sample-cicd-pipeline`                                      |
+| `<APP_ROUTE_HOST>`  | dev 環境アプリの Route ホスト   | `smart-mobility-dashboard-sample-cicd-dev.apps.example.com` |
+| `<GITEA_OWNER>`     | Gitea のリポジトリオーナー       | `myuser`                                                    |
+
 
 ```bash
 # マニフェストリポの一括置換
@@ -264,9 +275,9 @@ oc apply -f sample-cicd-app-manifests/tekton/smoke-test-event-listener.yaml -n s
 1. Gitea の `sample-cicd-app` リポジトリの **Settings → Webhooks** を開きます
 2. **「Add Webhook」→「Gitea」** を選択
 3. 以下を設定:
-   - **Target URL**: `oc get route ci-event-listener -n sample-cicd-pipeline -o jsonpath='{.status.ingress[0].host}'` の結果を `https://` 付きで入力
-   - **Secret**: event-listener.yaml で設定したシークレット値
-   - **Trigger On**: Push Events
+  - **Target URL**: `oc get route ci-event-listener -n sample-cicd-pipeline -o jsonpath='{.status.ingress[0].host}'` の結果を `https://` 付きで入力
+  - **Secret**: event-listener.yaml で設定したシークレット値
+  - **Trigger On**: Push Events
 4. **「Add Webhook」** をクリック
 
 ## Step 6: ArgoCD Application のデプロイ
@@ -321,9 +332,9 @@ oc patch configmap argocd-notifications-cm -n openshift-gitops --type merge -p "
 
 1. **DevSpaces でコードを変更** (例: `src/main.cpp` のバージョン文字列を変更)
 2. **Gitea に push**:
-   ```bash
+  ```bash
    git add -A && git commit -m "Update version" && git push
-   ```
+  ```
 3. **OpenShift Web Console → Pipelines** で CI パイプラインの実行を確認
 4. パイプライン完了後、**ArgoCD Web Console** で dev 環境へのデプロイを確認
 5. dev 環境の Route URL にアクセスしてアプリの動作を確認
@@ -416,3 +427,4 @@ cd ..
 podman build -t smart-mobility-backend:latest -f Containerfile .
 podman run -p 8080:8080 smart-mobility-backend:latest
 ```
+

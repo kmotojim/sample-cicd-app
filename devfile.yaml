@@ -7,7 +7,7 @@ components:
     container:
       # エアギャップ環境ではミラーレジストリのパスに変更してください
       # 例: <MIRROR_REGISTRY>/udi-cpp-dev:latest
-      image: image-registry.openshift-image-registry.svc:5000/openshift/udi-rhel9:3.26.1
+      image: image-registry.openshift-image-registry.svc:5000/openshift-devspaces/udi-rhel9:3.26.1
       memoryLimit: 4Gi
       memoryRequest: 1Gi
       cpuLimit: '2'

@@ -23,19 +23,17 @@ Tekton CI Pipeline
   ├── git-clone
   ├── cmake build & test
   ├── コンテナイメージ build & push
-  └── マニフェストリポの image tag 更新 (develop ブランチ)
-         │
-         ▼
-Gitea (マニフェストリポ: sample-cicd-app-manifests)
-  │
-  │ develop ブランチ監視
-  ▼
-ArgoCD → dev 環境にデプロイ
-  │
-  │ sync 成功通知
-  ▼
-Tekton Smoke Test Pipeline
-  ├── curl ヘルスチェック & API 確認
+  ├── マニフェストリポの image tag 更新 (develop ブランチ)
+  │       │
+  │       ▼
+  │   Gitea (マニフェストリポ: sample-cicd-app-manifests)
+  │       │
+  │       │ develop ブランチ監視
+  │       ▼
+  │   ArgoCD → dev 環境にデプロイ
+  │       │
+  ├── dev 環境ヘルスチェック待機
+  ├── スモークテスト (curl ヘルスチェック & API 確認)
   └── 成功時: develop → main の PR を自動作成
          │
          │ 手動マージ
@@ -253,9 +251,9 @@ cd ..
 
 ## Step 5: Tekton パイプラインのデプロイ
 
-> **注意**: Step 5〜8 は **ローカルマシン**（Step 1 で両リポジトリをクローンしたディレクトリ）で実行します。DevSpaces 内ではありません。
+> **注意**: Step 5〜7 は **ローカルマシン**（Step 1 で両リポジトリをクローンしたディレクトリ）で実行します。DevSpaces 内ではありません。
 
-CI パイプラインとスモークテストパイプラインはすべてマニフェストリポの `tekton/` にあります。
+CI パイプライン（スモークテスト・PR 作成含む）はすべてマニフェストリポの `tekton/` にあります。
 
 ```bash
 # namespace 作成
@@ -273,12 +271,6 @@ oc apply -f sample-cicd-app-manifests/tekton/ci-pipeline.yaml -n sample-cicd-pip
 oc apply -f sample-cicd-app-manifests/tekton/ci-trigger-binding.yaml -n sample-cicd-pipeline
 oc apply -f sample-cicd-app-manifests/tekton/ci-trigger-template.yaml -n sample-cicd-pipeline
 oc apply -f sample-cicd-app-manifests/tekton/ci-event-listener.yaml -n sample-cicd-pipeline
-
-# スモークテストパイプラインをデプロイ
-oc apply -f sample-cicd-app-manifests/tekton/smoke-test-pipeline.yaml -n sample-cicd-pipeline
-oc apply -f sample-cicd-app-manifests/tekton/smoke-test-trigger-binding.yaml -n sample-cicd-pipeline
-oc apply -f sample-cicd-app-manifests/tekton/smoke-test-trigger-template.yaml -n sample-cicd-pipeline
-oc apply -f sample-cicd-app-manifests/tekton/smoke-test-event-listener.yaml -n sample-cicd-pipeline
 ```
 
 ### Gitea Webhook の設定
@@ -319,25 +311,7 @@ oc apply -f sample-cicd-app-manifests/argocd/application-prod.yaml
 
 ArgoCD Web Console (`oc get route openshift-gitops-server -n openshift-gitops`) にアクセスして、Application が作成されていることを確認します。
 
-## Step 7: ArgoCD Notifications の設定
-
-ArgoCD が sync 成功時にスモークテスト EventListener に通知するよう設定します:
-
-```bash
-# スモークテスト EventListener の URL を取得
-SMOKE_URL=$(oc get route smoke-test-event-listener -n sample-cicd-pipeline -o jsonpath='https://{.status.ingress[0].host}')
-
-# ArgoCD Notifications の ConfigMap を更新
-oc patch configmap argocd-notifications-cm -n openshift-gitops --type merge -p "{
-  \"data\": {
-    \"service.webhook.smoke-test-webhook\": \"url: ${SMOKE_URL}\nheaders:\\n- name: Content-Type\\n  value: application/json\",
-    \"trigger.on-sync-succeeded\": \"- when: app.status.operationState.phase in ['Succeeded']\\n  send: [app-sync-succeeded]\",
-    \"template.app-sync-succeeded\": \"webhook:\\n  smoke-test-webhook:\\n    method: POST\\n    body: |\\n      {\\\"revision\\\": \\\"{{.app.status.sync.revision}}\\\"}\"
-  }
-}"
-```
-
-## Step 8: 動作確認
+## Step 7: 動作確認
 
 ### CI/CD フロー全体のテスト
 
@@ -347,12 +321,11 @@ oc patch configmap argocd-notifications-cm -n openshift-gitops --type merge -p "
    git add -A && git commit -m "Update version" && git push
   ```
 3. **OpenShift Web Console → Pipelines** で CI パイプラインの実行を確認
-4. パイプライン完了後、**ArgoCD Web Console** で dev 環境へのデプロイを確認
-5. dev 環境の Route URL にアクセスしてアプリの動作を確認
-6. スモークテストパイプラインが自動実行されることを確認
-7. **Gitea** でマニフェストリポに **develop → main の PR** が自動作成されていることを確認
-8. PR を手動でマージ
-9. ArgoCD が prod 環境にデプロイすることを確認
+4. CI パイプラインが `update-manifests` まで進むと、ArgoCD が dev 環境にデプロイ
+5. CI パイプラインの `wait-for-deploy` → `smoke-test` → `create-pr` ステップが順に完了
+6. **Gitea** でマニフェストリポに **develop → main の PR** が自動作成されていることを確認
+7. PR を手動でマージ
+8. ArgoCD が prod 環境にデプロイすることを確認
 
 ---
 

@@ -102,6 +102,25 @@ oc get csv -n openshift-operators | grep devspaces
 # Gitea の URL にブラウザでアクセスできることを確認
 ```
 
+### Gitea の準備
+
+- Gitea にユーザーアカウントが作成済みであること
+- **API トークン** を発行済みであること（CI パイプラインからの push や PR 作成で使用）
+
+トークンの発行方法:
+1. Gitea Web UI → 右上のユーザーアイコン → **「設定」**
+2. **「アプリケーション」** タブを開く
+3. トークン名（例: `cicd-pipeline`）を入力
+4. **権限を選択** で以下を設定:
+
+| カテゴリ | 権限 | 用途 |
+|---------|------|------|
+| **リポジトリ (repository)** | **読み取りと書き込み** | CI パイプラインからマニフェストリポへの `git push` |
+| **Issue (issue)** | **読み取りと書き込み** | スモークテストから develop → main の PR 作成・既存 PR 確認 |
+
+5. **「トークンを生成」** をクリック
+6. 表示されたトークンを控えておく（**この画面でしか確認できません**。後の Step 2, Step 5 で使用）
+
 ### 必要なコンテナイメージ
 
 エアギャップ環境では、以下のイメージがミラーレジストリに必要です:
@@ -127,18 +146,16 @@ git clone https://github.com/kmotojim/sample-cicd-app-manifests.git
 cd sample-cicd-app
 ./scripts/download-deps.sh
 
-# リポジトリにコミット
-git add third_party/
-git commit -m "Add vendored third-party dependencies"
-cd ..
 ```
 
 ## Step 2: Gitea にリポジトリを作成
 
-Gitea の Web UI から以下の2つのリポジトリを作成します:
+Gitea の Web UI から以下の2つの **空リポジトリ** を作成します（README の初期化はしない）:
 
 1. **`sample-cicd-app`** (ソースコード用)
 2. **`sample-cicd-app-manifests`** (マニフェスト用)
+
+> **注意**: push 時に認証を求められます。Gitea のユーザー名と、前提条件で発行した **API トークン（パスワードの代わり）** を使用してください。
 
 ```bash
 # ソースコードリポジトリを push

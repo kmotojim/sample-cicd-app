@@ -2,7 +2,7 @@
 
 > **このドキュメントがすべての手順のエントリポイントです。**
 > セットアップは本 README の「セットアップ手順」セクションを上から順に進めてください。
-> 他のリポジトリ (`manifests-repo/README.md`, `third_party/README.md`) は補足的なリファレンスであり、個別に読む必要はありません。
+> マニフェストリポ (`sample-cicd-app-manifests`) や `third_party/README.md` は補足的なリファレンスであり、個別に読む必要はありません。
 
 OpenShift 上で **DevSpaces** + **OpenShift Pipeline (Tekton)** + **OpenShift GitOps (ArgoCD)** を体験するためのサンプルアプリケーションです。
 
@@ -50,7 +50,7 @@ ArgoCD → prod 環境にデプロイ
 | リポジトリ | 内容 | ブランチ |
 |-----------|------|---------|
 | `sample-cicd-app` (本リポジトリ) | C++ ソースコード | main |
-| `sample-cicd-app-manifests` (`manifests-repo/` に同梱) | K8s マニフェスト、ArgoCD、Tekton (CI + スモークテスト) | develop, main |
+| [`sample-cicd-app-manifests`](https://github.com/kmotojim/sample-cicd-app-manifests) | K8s マニフェスト、ArgoCD、Tekton (CI + スモークテスト) | develop, main |
 
 ## 技術スタック
 
@@ -114,21 +114,23 @@ oc get csv -n openshift-operators | grep devspaces
 
 ---
 
-## Step 1: 依存ライブラリのダウンロード
+## Step 1: リポジトリの取得と依存ライブラリのダウンロード
 
 **インターネット接続可能なマシンで**実行してください:
 
 ```bash
-# リポジトリをクローン
-git clone <this-repo-url> sample-cicd-app
-cd sample-cicd-app
+# 2つのリポジトリをクローン
+git clone https://github.com/kmotojim/sample-cicd-app.git
+git clone https://github.com/kmotojim/sample-cicd-app-manifests.git
 
 # 依存ライブラリをダウンロード
+cd sample-cicd-app
 ./scripts/download-deps.sh
 
 # リポジトリにコミット
 git add third_party/
 git commit -m "Add vendored third-party dependencies"
+cd ..
 ```
 
 ## Step 2: Gitea にリポジトリを作成
@@ -143,19 +145,17 @@ Gitea の Web UI から以下の2つのリポジトリを作成します:
 cd sample-cicd-app
 git remote set-url origin https://<GITEA_HOST>/<OWNER>/sample-cicd-app.git
 git push -u origin main
+cd ..
 
-# マニフェストリポジトリを push (manifests-repo/ の内容)
-cd manifests-repo
-git init
-git checkout -b main
-git add -A
-git commit -m "Initial commit"
-git remote add origin https://<GITEA_HOST>/<OWNER>/sample-cicd-app-manifests.git
+# マニフェストリポジトリを push
+cd sample-cicd-app-manifests
+git remote set-url origin https://<GITEA_HOST>/<OWNER>/sample-cicd-app-manifests.git
 git push -u origin main
 
 # develop ブランチも作成
 git checkout -b develop
 git push -u origin develop
+cd ..
 ```
 
 ## Step 3: DevSpaces で開発環境を起動
@@ -197,12 +197,13 @@ cd ..
 
 ```bash
 # マニフェストリポの一括置換
-cd manifests-repo
+cd sample-cicd-app-manifests
 sed -i 's|<GITEA_HOST>|gitea.apps.example.com|g' argocd/*.yaml tekton/*.yaml
 sed -i 's|<MIRROR_REGISTRY>|registry.apps.example.com|g' base/kustomization.yaml tekton/ci-pipeline.yaml
 sed -i 's|<NAMESPACE>|sample-cicd-pipeline|g' tekton/*.yaml
 sed -i 's|<APP_ROUTE_HOST>|smart-mobility-dashboard-sample-cicd-dev.apps.example.com|g' tekton/*.yaml
 sed -i 's|<GITEA_OWNER>|myuser|g' tekton/*.yaml
+cd ..
 ```
 
 ソースリポの Containerfile 内のイメージパスも必要に応じて変更してください:
@@ -210,6 +211,7 @@ sed -i 's|<GITEA_OWNER>|myuser|g' tekton/*.yaml
 ```bash
 cd sample-cicd-app
 sed -i 's|registry.access.redhat.com|<MIRROR_REGISTRY>|g' Containerfile
+cd ..
 ```
 
 ## Step 5: Tekton パイプラインのデプロイ
@@ -227,17 +229,17 @@ oc create secret generic gitea-credentials \
   --from-file=.git-credentials=<(echo "https://<GITEA_USERNAME>:<GITEA_PASSWORD>@<GITEA_HOST>") \
   -n sample-cicd-pipeline
 
-# CI パイプラインをデプロイ
-oc apply -f manifests-repo/tekton/ci-pipeline.yaml -n sample-cicd-pipeline
-oc apply -f manifests-repo/tekton/ci-trigger-binding.yaml -n sample-cicd-pipeline
-oc apply -f manifests-repo/tekton/ci-trigger-template.yaml -n sample-cicd-pipeline
-oc apply -f manifests-repo/tekton/ci-event-listener.yaml -n sample-cicd-pipeline
+# CI パイプラインをデプロイ (sample-cicd-app-manifests リポジトリ内)
+oc apply -f sample-cicd-app-manifests/tekton/ci-pipeline.yaml -n sample-cicd-pipeline
+oc apply -f sample-cicd-app-manifests/tekton/ci-trigger-binding.yaml -n sample-cicd-pipeline
+oc apply -f sample-cicd-app-manifests/tekton/ci-trigger-template.yaml -n sample-cicd-pipeline
+oc apply -f sample-cicd-app-manifests/tekton/ci-event-listener.yaml -n sample-cicd-pipeline
 
 # スモークテストパイプラインをデプロイ
-oc apply -f manifests-repo/tekton/smoke-test-pipeline.yaml -n sample-cicd-pipeline
-oc apply -f manifests-repo/tekton/smoke-test-trigger-binding.yaml -n sample-cicd-pipeline
-oc apply -f manifests-repo/tekton/smoke-test-trigger-template.yaml -n sample-cicd-pipeline
-oc apply -f manifests-repo/tekton/smoke-test-event-listener.yaml -n sample-cicd-pipeline
+oc apply -f sample-cicd-app-manifests/tekton/smoke-test-pipeline.yaml -n sample-cicd-pipeline
+oc apply -f sample-cicd-app-manifests/tekton/smoke-test-trigger-binding.yaml -n sample-cicd-pipeline
+oc apply -f sample-cicd-app-manifests/tekton/smoke-test-trigger-template.yaml -n sample-cicd-pipeline
+oc apply -f sample-cicd-app-manifests/tekton/smoke-test-event-listener.yaml -n sample-cicd-pipeline
 ```
 
 ### Gitea Webhook の設定
@@ -270,10 +272,10 @@ stringData:
   password: <GITEA_PASSWORD>
 EOF
 
-# AppProject と Application をデプロイ
-oc apply -f manifests-repo/argocd/appproject.yaml
-oc apply -f manifests-repo/argocd/application-dev.yaml
-oc apply -f manifests-repo/argocd/application-prod.yaml
+# AppProject と Application をデプロイ (sample-cicd-app-manifests リポジトリ内)
+oc apply -f sample-cicd-app-manifests/argocd/appproject.yaml
+oc apply -f sample-cicd-app-manifests/argocd/application-dev.yaml
+oc apply -f sample-cicd-app-manifests/argocd/application-prod.yaml
 ```
 
 ArgoCD Web Console (`oc get route openshift-gitops-server -n openshift-gitops`) にアクセスして、Application が作成されていることを確認します。

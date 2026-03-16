@@ -1,18 +1,13 @@
 # ===========================================================================
 # Smart Mobility Dashboard - Container Build (UBI9)
 #
-# エアギャップ環境向け: ベースイメージをミラーレジストリのパスに
-# 変更してください（例: <MIRROR_REGISTRY>/ubi9/ubi:latest）
+# エアギャップ環境向け: <MIRROR_REGISTRY> を実際のミラーレジストリに
+# 置き換えてください（例: registry.example.com）
 # ===========================================================================
 
 # --- Builder stage ---
-FROM <MIRROR_REGISTRY>/ubi9/ubi:latest AS builder
-
-RUN dnf install -y \
-    gcc-c++ \
-    make \
-    cmake \
-    && dnf clean all
+# gcc-c++, cmake, make がプリインストールされたイメージを使用
+FROM <MIRROR_REGISTRY>/udi-rhel9:latest AS builder
 
 WORKDIR /app
 
@@ -21,14 +16,14 @@ COPY third_party/ ./third_party/
 COPY include/ ./include/
 COPY src/ ./src/
 
+# 静的リンクにより Runtime ステージでの libstdc++ インストールを不要にする
 RUN mkdir build && cd build && \
-    cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF .. && \
+    cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF \
+          -DCMAKE_EXE_LINKER_FLAGS="-static-libstdc++ -static-libgcc" .. && \
     cmake --build . --parallel $(nproc)
 
 # --- Runtime stage ---
 FROM <MIRROR_REGISTRY>/ubi9/ubi-minimal:latest
-
-RUN microdnf install -y libstdc++ && microdnf clean all
 
 WORKDIR /app
 

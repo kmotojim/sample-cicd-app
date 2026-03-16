@@ -170,6 +170,9 @@ Gitea に push する **前に**、プレースホルダーを環境に合わせ
 | `<GITEA_OWNER>` | Gitea のリポジトリオーナー | `myuser` |
 | `<OWNER>` | Gitea のリポジトリオーナー（Git URL 用） | `myuser` |
 
+> **macOS の場合**: `sed -i` ではなく `sed -i ''` を使用してください（BSD sed と GNU sed の違い）。
+> 以下の例は Linux (GNU sed) 向けです。
+
 ### マニフェストリポの一括置換
 
 ```bash

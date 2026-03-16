@@ -15,6 +15,10 @@ endif()
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
+# --- Options (third_party より先に定義する必要がある) ---
+option(BUILD_TESTS "Build tests" ON)
+option(ENABLE_COVERAGE "Enable gcov coverage" OFF)
+
 # --- Third-party dependencies (vendored for air-gapped environments) ---
 # Run scripts/download-deps.sh to populate third_party/ before building.
 add_subdirectory(third_party)
@@ -42,8 +46,6 @@ endif()
 install(TARGETS smart-mobility-backend RUNTIME DESTINATION bin)
 
 # --- Coverage ---
-option(ENABLE_COVERAGE "Enable gcov coverage" OFF)
-
 if(ENABLE_COVERAGE)
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         add_compile_options(--coverage -fprofile-arcs -ftest-coverage)
@@ -52,8 +54,6 @@ if(ENABLE_COVERAGE)
 endif()
 
 # --- Tests ---
-option(BUILD_TESTS "Build tests" ON)
-
 if(BUILD_TESTS)
     enable_testing()
 

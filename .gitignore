@@ -45,5 +45,8 @@ coverage*.html
 # CMake FetchContent cache (not used in this project)
 _deps/
 
+# Manifests repo (別リポジトリとして管理)
+manifests-repo/
+
 # Logs
 *.log

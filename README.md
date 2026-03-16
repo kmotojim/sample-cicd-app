@@ -110,7 +110,7 @@ oc get csv -n openshift-operators | grep devspaces
 |---------|------|
 | `registry.access.redhat.com/ubi9/ubi:latest` | ビルドステージ |
 | `registry.access.redhat.com/ubi9/ubi-minimal:latest` | ランタイムステージ |
-| DevSpaces UDI イメージ + C++ ツール | DevSpaces / Tekton ビルド |
+| `registry.redhat.io/devspaces/udi-rhel9:latest` | DevSpaces UDI ベース (C++ ツール追加用) |
 
 ---
 

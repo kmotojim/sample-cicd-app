@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: sample-cicd-dev
+
+resources:
+  - ../../base
+  - namespace.yaml
+
+patches:
+  # base の namespace リソースを dev 用に置き換え
+  - target:
+      kind: Namespace
+      name: sample-cicd-app
+    patch: |
+      $patch: delete
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: sample-cicd-app
+
+replicas:
+  - name: smart-mobility-backend
+    count: 1

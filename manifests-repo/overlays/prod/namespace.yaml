@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sample-cicd-prod
+  labels:
+    app.kubernetes.io/name: sample-cicd-app
+    environment: production

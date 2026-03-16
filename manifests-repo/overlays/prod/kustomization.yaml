@@ -1,0 +1,41 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: sample-cicd-prod
+
+resources:
+  - ../../base
+  - namespace.yaml
+
+patches:
+  # base の namespace リソースを prod 用に置き換え
+  - target:
+      kind: Namespace
+      name: sample-cicd-app
+    patch: |
+      $patch: delete
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: sample-cicd-app
+  # prod 環境ではリソースを増加
+  - target:
+      kind: Deployment
+      name: smart-mobility-backend
+    patch: |
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "256Mi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "512Mi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "200m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "1000m"
+
+replicas:
+  - name: smart-mobility-backend
+    count: 2

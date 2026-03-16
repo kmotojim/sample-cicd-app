@@ -1,0 +1,42 @@
+# =============================================================================
+# ArgoCD Application - Dev 環境
+#
+# develop ブランチの overlays/dev を監視し、dev namespace に自動デプロイします。
+#
+# カスタマイズ箇所:
+#   - <GITEA_HOST> : Gitea のホスト名
+# =============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sample-cicd-app-dev
+  namespace: openshift-gitops
+  annotations:
+    # ArgoCD sync 成功時にスモークテスト用 EventListener に通知
+    # <SMOKE_TEST_ROUTE> を実際の Route URL に置き換えてください
+    notifications.argoproj.io/subscribe.on-sync-succeeded.webhook: smoke-test-webhook
+spec:
+  project: sample-cicd-app
+
+  source:
+    repoURL: https://<GITEA_HOST>/sample-cicd-app-manifests.git
+    targetRevision: develop
+    path: overlays/dev
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: sample-cicd-dev
+
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

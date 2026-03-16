@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Mobility Dashboard</title>
+    <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1>Smart Mobility Dashboard</h1>
+            <span class="version">v1.0</span>
+        </header>
+        
+        <main class="dashboard-main">
+            <section class="meter-panel">
+                <div class="speedometer-container">
+                    <canvas id="speedometer" width="300" height="300"></canvas>
+                    <div class="speed-display">
+                        <span id="speed-value">0</span>
+                        <span class="speed-unit">km/h</span>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="indicator-panel">
+                <div class="gear-indicator">
+                    <h3>GEAR</h3>
+                    <div class="gear-display">
+                        <span class="gear-item" data-gear="P">P</span>
+                        <span class="gear-item" data-gear="R">R</span>
+                        <span class="gear-item" data-gear="N">N</span>
+                        <span class="gear-item" data-gear="D">D</span>
+                    </div>
+                </div>
+                
+                <div class="warning-lights">
+                    <h3>WARNING</h3>
+                    <div class="warning-display">
+                        <div class="warning-item" id="engine-warning" title="Engine Warning">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M7 4v2h3v2H7l-2 2v3H3v-3H1v8h2v-3h2v3h2l2 2h8l2-2v-3h2v3h2v-8h-2v3h-2v-3l-2-2h-3V6h3V4H7z"/>
+                            </svg>
+                            <span>ENGINE</span>
+                        </div>
+                        <div class="warning-item" id="seatbelt-warning" title="Seatbelt Warning">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C13.1 2 14 2.9 14 4S13.1 6 12 6 10 5.1 10 4 10.9 2 12 2M21 9H15L13 7H11L9 9H3V11H7L9 13H7V22H9V16L11 14V22H13V14L15 16V22H17V13H15L13 11H17V9H21V9Z"/>
+                            </svg>
+                            <span>SEATBELT</span>
+                        </div>
+                        <div class="warning-item" id="speed-warning" title="Speed Warning">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                            </svg>
+                            <span>SPEED</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="control-panel">
+                <h3>CONTROL</h3>
+                
+                <div class="control-group">
+                    <h4>Speed</h4>
+                    <div class="speed-controls">
+                        <button id="btn-decelerate" class="control-btn decelerate" title="Decelerate">
+                            <span>&minus;</span>
+                        </button>
+                        <button id="btn-accelerate" class="control-btn accelerate" title="Accelerate">
+                            <span>+</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h4>Gear</h4>
+                    <div class="gear-controls">
+                        <button class="gear-btn" data-gear="P">P</button>
+                        <button class="gear-btn" data-gear="R">R</button>
+                        <button class="gear-btn" data-gear="N">N</button>
+                        <button class="gear-btn" data-gear="D">D</button>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h4>Seatbelt</h4>
+                    <div class="seatbelt-controls">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="seatbelt-toggle">
+                            <span class="slider"></span>
+                        </label>
+                        <span id="seatbelt-status">Not fastened</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h4>Test</h4>
+                    <div class="test-controls">
+                        <label class="toggle-switch error">
+                            <input type="checkbox" id="engine-error-toggle">
+                            <span class="slider"></span>
+                        </label>
+                        <span>Engine Error</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <button id="btn-reset" class="control-btn reset">Reset</button>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="dashboard-footer">
+            <span>Smart Mobility Dashboard - Sample CI/CD Application</span>
+        </footer>
+    </div>
+    
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>

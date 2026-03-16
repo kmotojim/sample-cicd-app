@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smart-mobility-backend
+  labels:
+    app: smart-mobility-backend
+    app.kubernetes.io/name: sample-cicd-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: smart-mobility-backend
+  template:
+    metadata:
+      labels:
+        app: smart-mobility-backend
+    spec:
+      containers:
+        - name: backend
+          # イメージは kustomization.yaml の images セクションで上書きされます
+          image: smart-mobility-backend:latest
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /api/vehicle/state
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "10m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"

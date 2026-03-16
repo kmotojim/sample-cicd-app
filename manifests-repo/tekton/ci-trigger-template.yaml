@@ -1,0 +1,58 @@
+# =============================================================================
+# TriggerTemplate: CI PipelineRun を生成
+#
+# EventListener がトリガーされた際に、CI Pipeline の PipelineRun を作成します。
+#
+# カスタマイズ箇所:
+#   - <NAMESPACE>        : デプロイ先の namespace
+#   - <MIRROR_REGISTRY>  : ミラーレジストリのアドレス
+#   - <GITEA_HOST>       : Gitea のホスト名
+# =============================================================================
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: ci-trigger-template
+  namespace: <NAMESPACE>
+spec:
+  params:
+    - name: git-url
+      description: Gitea リポジトリ URL
+    - name: git-revision
+      description: Git コミットハッシュ
+    - name: git-branch
+      description: Git ブランチ名
+
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1
+      kind: PipelineRun
+      metadata:
+        generateName: sample-cicd-pipeline-run-
+        namespace: <NAMESPACE>
+      spec:
+        pipelineRef:
+          name: sample-cicd-pipeline
+        params:
+          - name: git-url
+            value: $(tt.params.git-url)
+          - name: git-revision
+            value: $(tt.params.git-revision)
+          - name: image-name
+            value: <MIRROR_REGISTRY>/sample-cicd-app/smart-mobility-backend
+          - name: manifests-repo-url
+            value: https://<GITEA_HOST>/sample-cicd-app-manifests.git
+          - name: manifests-branch
+            value: develop
+        workspaces:
+          - name: shared-workspace
+            volumeClaimTemplate:
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 1Gi
+          - name: git-credentials
+            secret:
+              secretName: gitea-credentials
+        timeouts:
+          pipeline: "30m"

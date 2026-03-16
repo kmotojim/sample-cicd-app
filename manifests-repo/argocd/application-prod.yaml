@@ -1,0 +1,38 @@
+# =============================================================================
+# ArgoCD Application - Prod 環境
+#
+# main ブランチの overlays/prod を監視し、prod namespace にデプロイします。
+#
+# カスタマイズ箇所:
+#   - <GITEA_HOST> : Gitea のホスト名
+# =============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sample-cicd-app-prod
+  namespace: openshift-gitops
+spec:
+  project: sample-cicd-app
+
+  source:
+    repoURL: https://<GITEA_HOST>/sample-cicd-app-manifests.git
+    targetRevision: main
+    path: overlays/prod
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: sample-cicd-prod
+
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

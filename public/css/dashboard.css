@@ -1,0 +1,418 @@
+:root {
+    --bg-primary: #0a0f14;
+    --bg-secondary: #141c24;
+    --bg-panel: #1a242e;
+    --text-primary: #e8eaed;
+    --text-secondary: #8a9199;
+    --accent-blue: #00b8d4;
+    --accent-green: #00e676;
+    --accent-orange: #ff9100;
+    --accent-red: #ff5252;
+    --border-color: #2a3844;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    color: var(--text-primary);
+    min-height: 100vh;
+}
+
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 30px;
+    background: var(--bg-panel);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+.dashboard-header h1 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--accent-blue);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.version {
+    background: var(--accent-blue);
+    color: var(--bg-primary);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.dashboard-main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 20px;
+    flex: 1;
+}
+
+.meter-panel {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    background: var(--bg-panel);
+    border-radius: 12px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+.speedometer-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#speedometer {
+    filter: drop-shadow(0 0 20px rgba(0, 184, 212, 0.3));
+}
+
+.speed-display {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    margin-top: 20px;
+}
+
+#speed-value {
+    font-size: 4rem;
+    font-weight: 700;
+    color: var(--accent-blue);
+    text-shadow: 0 0 20px rgba(0, 184, 212, 0.5);
+}
+
+.speed-unit {
+    display: block;
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    margin-top: -10px;
+}
+
+.indicator-panel {
+    grid-column: 2;
+    grid-row: 1;
+    background: var(--bg-panel);
+    border-radius: 12px;
+    padding: 25px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+.indicator-panel h3,
+.control-panel h3 {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.gear-indicator {
+    margin-bottom: 25px;
+}
+
+.gear-display {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.gear-item {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+}
+
+.gear-item.active {
+    background: var(--accent-green);
+    border-color: var(--accent-green);
+    color: var(--bg-primary);
+    box-shadow: 0 0 20px rgba(0, 230, 118, 0.4);
+}
+
+.warning-display {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+.warning-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 15px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    border: 2px solid var(--border-color);
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+}
+
+.warning-item svg {
+    width: 32px;
+    height: 32px;
+}
+
+.warning-item span {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.warning-item.active {
+    color: var(--accent-red);
+    border-color: var(--accent-red);
+    background: rgba(255, 82, 82, 0.1);
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.control-panel {
+    grid-column: 2;
+    grid-row: 2;
+    background: var(--bg-panel);
+    border-radius: 12px;
+    padding: 25px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+.control-group {
+    margin-bottom: 20px;
+}
+
+.control-group:last-child {
+    margin-bottom: 0;
+}
+
+.control-group h4 {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.speed-controls {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.control-btn {
+    padding: 15px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+}
+
+.control-btn.accelerate {
+    background: linear-gradient(135deg, var(--accent-green) 0%, #00c853 100%);
+    color: var(--bg-primary);
+}
+
+.control-btn.accelerate:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(0, 230, 118, 0.5);
+}
+
+.control-btn.decelerate {
+    background: linear-gradient(135deg, var(--accent-orange) 0%, #ff6d00 100%);
+    color: var(--bg-primary);
+}
+
+.control-btn.decelerate:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 145, 0, 0.5);
+}
+
+.control-btn.reset {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 2px solid var(--border-color);
+    width: 100%;
+    font-size: 1rem;
+    padding: 12px;
+}
+
+.control-btn.reset:hover {
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+}
+
+.control-btn:active {
+    transform: scale(0.95);
+}
+
+.gear-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.gear-btn {
+    width: 45px;
+    height: 45px;
+    border: 2px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.gear-btn:hover {
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+}
+
+.gear-btn.active {
+    background: var(--accent-green);
+    border-color: var(--accent-green);
+    color: var(--bg-primary);
+}
+
+.gear-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.seatbelt-controls,
+.test-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.toggle-switch {
+    position: relative;
+    width: 50px;
+    height: 26px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 26px;
+    transition: 0.3s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 2px;
+    bottom: 2px;
+    background: var(--text-secondary);
+    border-radius: 50%;
+    transition: 0.3s;
+}
+
+input:checked + .slider {
+    background: var(--accent-green);
+    border-color: var(--accent-green);
+}
+
+input:checked + .slider:before {
+    transform: translateX(24px);
+    background: var(--bg-primary);
+}
+
+.toggle-switch.error input:checked + .slider {
+    background: var(--accent-red);
+    border-color: var(--accent-red);
+}
+
+.dashboard-footer {
+    margin-top: 20px;
+    padding: 15px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+@media (max-width: 900px) {
+    .dashboard-main {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+    }
+
+    .meter-panel {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .indicator-panel {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    .control-panel {
+        grid-column: 1;
+        grid-row: 3;
+    }
+}

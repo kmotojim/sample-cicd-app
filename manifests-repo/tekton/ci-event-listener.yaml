@@ -1,0 +1,94 @@
+# =============================================================================
+# EventListener: Gitea ウェブフック受信用 (CI パイプライン)
+#
+# Gitea の push イベントを受信して CI パイプラインをトリガーします。
+#
+# カスタマイズ箇所:
+#   - <NAMESPACE> : デプロイ先の namespace
+# =============================================================================
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pipeline-trigger-sa
+  namespace: <NAMESPACE>
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pipeline-trigger-binding
+  namespace: <NAMESPACE>
+subjects:
+  - kind: ServiceAccount
+    name: pipeline-trigger-sa
+    namespace: <NAMESPACE>
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-triggers-eventlistener-roles
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: pipeline-trigger-clusterbinding-<NAMESPACE>
+subjects:
+  - kind: ServiceAccount
+    name: pipeline-trigger-sa
+    namespace: <NAMESPACE>
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-triggers-eventlistener-clusterroles
+---
+# Gitea ウェブフックの Secret（任意のシークレット値に変更してください）
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gitea-webhook-secret
+  namespace: <NAMESPACE>
+type: Opaque
+stringData:
+  secret: "change-me-to-a-random-string"
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: ci-event-listener
+  namespace: <NAMESPACE>
+spec:
+  serviceAccountName: pipeline-trigger-sa
+  triggers:
+    - name: gitea-push-trigger
+      interceptors:
+        # Gitea は GitHub 互換ウェブフック形式をサポート
+        - ref:
+            name: "github"
+          params:
+            - name: "secretRef"
+              value:
+                secretName: gitea-webhook-secret
+                secretKey: secret
+            - name: "eventTypes"
+              value: ["push"]
+        - ref:
+            name: "cel"
+          params:
+            - name: "filter"
+              value: "body.ref.startsWith('refs/heads/')"
+      bindings:
+        - ref: ci-trigger-binding
+      template:
+        ref: ci-trigger-template
+---
+# EventListener を外部からアクセス可能にする Route
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: ci-event-listener
+  namespace: <NAMESPACE>
+spec:
+  to:
+    kind: Service
+    name: el-ci-event-listener
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

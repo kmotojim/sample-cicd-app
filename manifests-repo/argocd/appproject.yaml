@@ -1,0 +1,49 @@
+# =============================================================================
+# ArgoCD AppProject
+#
+# カスタマイズ箇所:
+#   - <GITEA_HOST> : Gitea のホスト名
+# =============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: sample-cicd-app
+  namespace: openshift-gitops
+spec:
+  description: Sample CI/CD Application Project
+
+  sourceRepos:
+    - "https://<GITEA_HOST>/sample-cicd-app-manifests.git"
+
+  destinations:
+    - namespace: sample-cicd-dev
+      server: https://kubernetes.default.svc
+    - namespace: sample-cicd-prod
+      server: https://kubernetes.default.svc
+
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: Secret
+    - group: ""
+      kind: Service
+    - group: apps
+      kind: Deployment
+    - group: route.openshift.io
+      kind: Route
+
+  roles:
+    - name: developer
+      description: Developer access
+      policies:
+        - "p, proj:sample-cicd-app:developer, applications, get, sample-cicd-app/*, allow"
+        - "p, proj:sample-cicd-app:developer, applications, sync, sample-cicd-app/*, allow"
+    - name: admin
+      description: Admin access
+      policies:
+        - "p, proj:sample-cicd-app:admin, applications, *, sample-cicd-app/*, allow"

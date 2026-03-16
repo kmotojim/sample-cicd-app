@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: sample-cicd-app
+
+commonLabels:
+  app.kubernetes.io/managed-by: argocd
+
+resources:
+  - namespace.yaml
+  - deployment.yaml
+  - service.yaml
+  - route.yaml
+
+images:
+  - name: smart-mobility-backend
+    newName: <MIRROR_REGISTRY>/sample-cicd-app/smart-mobility-backend
+    newTag: "latest"

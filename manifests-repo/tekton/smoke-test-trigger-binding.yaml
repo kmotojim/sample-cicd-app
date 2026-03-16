@@ -1,0 +1,15 @@
+# =============================================================================
+# TriggerBinding: ArgoCD sync 通知ペイロードマッピング (スモークテスト)
+#
+# ArgoCD Notifications webhook から送信されるペイロードの
+# revision フィールドを抽出します。
+# =============================================================================
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: smoke-test-trigger-binding
+  namespace: <NAMESPACE>
+spec:
+  params:
+    - name: app-revision
+      value: $(body.revision)

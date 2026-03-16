@@ -1,0 +1,19 @@
+# =============================================================================
+# TriggerBinding: Gitea push イベントのペイロードマッピング (CI パイプライン)
+#
+# Gitea の push ウェブフックペイロードから必要なパラメータを抽出します。
+# Gitea は GitHub 互換形式のためフィールド名は同一です。
+# =============================================================================
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: ci-trigger-binding
+  namespace: <NAMESPACE>
+spec:
+  params:
+    - name: git-url
+      value: $(body.repository.clone_url)
+    - name: git-revision
+      value: $(body.after)
+    - name: git-branch
+      value: $(extensions.truncated_sha)

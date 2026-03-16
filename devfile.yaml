@@ -1,0 +1,52 @@
+schemaVersion: 2.2.2
+metadata:
+  name: sample-cicd-app
+  description: Sample CI/CD Application - Smart Mobility Dashboard (C++)
+components:
+  - name: tools
+    container:
+      # エアギャップ環境ではミラーレジストリのパスに変更してください
+      # 例: <MIRROR_REGISTRY>/udi-cpp-dev:latest
+      image: image-registry.openshift-image-registry.svc:5000/openshift-devspaces/udi-cpp-dev:latest
+      memoryLimit: 4Gi
+      memoryRequest: 1Gi
+      cpuLimit: '2'
+      cpuRequest: '0.5'
+      mountSources: true
+      sourceMapping: /projects
+      endpoints:
+        - name: backend
+          targetPort: 8080
+          exposure: public
+          protocol: https
+commands:
+  - id: build
+    exec:
+      label: "Build"
+      component: tools
+      workingDir: ${PROJECT_SOURCE}
+      commandLine: |
+        mkdir -p build && cd build && cmake .. && cmake --build . --parallel $(nproc)
+      group:
+        kind: build
+        isDefault: true
+  - id: run
+    exec:
+      label: "Run"
+      component: tools
+      workingDir: ${PROJECT_SOURCE}
+      commandLine: |
+        ./build/smart-mobility-backend
+      group:
+        kind: run
+        isDefault: true
+  - id: test
+    exec:
+      label: "Test"
+      component: tools
+      workingDir: ${PROJECT_SOURCE}
+      commandLine: |
+        cd build && ctest --output-on-failure
+      group:
+        kind: test
+        isDefault: true

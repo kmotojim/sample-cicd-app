@@ -1,0 +1,69 @@
+# =============================================================================
+# EventListener: ArgoCD sync 通知受信用 (スモークテスト)
+#
+# ArgoCD Notifications から sync 成功の通知を受信し、
+# スモークテストパイプラインをトリガーします。
+#
+# カスタマイズ箇所:
+#   - <NAMESPACE> : デプロイ先の namespace
+# =============================================================================
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: smoke-test-trigger-sa
+  namespace: <NAMESPACE>
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: smoke-test-trigger-binding
+  namespace: <NAMESPACE>
+subjects:
+  - kind: ServiceAccount
+    name: smoke-test-trigger-sa
+    namespace: <NAMESPACE>
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-triggers-eventlistener-roles
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: smoke-test-trigger-clusterbinding-<NAMESPACE>
+subjects:
+  - kind: ServiceAccount
+    name: smoke-test-trigger-sa
+    namespace: <NAMESPACE>
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-triggers-eventlistener-clusterroles
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: smoke-test-event-listener
+  namespace: <NAMESPACE>
+spec:
+  serviceAccountName: smoke-test-trigger-sa
+  triggers:
+    - name: argocd-sync-trigger
+      bindings:
+        - ref: smoke-test-trigger-binding
+      template:
+        ref: smoke-test-trigger-template
+---
+# EventListener を外部からアクセス可能にする Route
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: smoke-test-event-listener
+  namespace: <NAMESPACE>
+spec:
+  to:
+    kind: Service
+    name: el-smoke-test-event-listener
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

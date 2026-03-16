@@ -154,15 +154,56 @@ git clone https://github.com/kmotojim/sample-cicd-app-manifests.git
 # 依存ライブラリをダウンロード
 cd sample-cicd-app
 ./scripts/download-deps.sh
-
+cd ..
 ```
 
-## Step 2: Gitea にリポジトリを作成
+## Step 2: YAML ファイルのカスタマイズ
+
+Gitea に push する **前に**、プレースホルダーを環境に合わせて置き換えます。
+
+| プレースホルダー | 説明 | 例 |
+|---|---|---|
+| `<GITEA_HOST>` | Gitea のホスト名 | `gitea.apps.example.com` |
+| `<MIRROR_REGISTRY>` | ミラーレジストリのアドレス | `registry.apps.example.com` |
+| `<NAMESPACE>` | Tekton リソースの namespace | `sample-cicd-pipeline` |
+| `<APP_ROUTE_HOST>` | dev 環境アプリの Route ホスト | `smart-mobility-dashboard-sample-cicd-dev.apps.example.com` |
+| `<GITEA_OWNER>` | Gitea のリポジトリオーナー | `myuser` |
+| `<OWNER>` | Gitea のリポジトリオーナー（Git URL 用） | `myuser` |
+
+### マニフェストリポの一括置換
+
+```bash
+cd sample-cicd-app-manifests
+sed -i 's|<GITEA_HOST>|gitea.apps.example.com|g' argocd/*.yaml tekton/*.yaml
+sed -i 's|<MIRROR_REGISTRY>|registry.apps.example.com|g' base/kustomization.yaml tekton/ci-pipeline.yaml
+sed -i 's|<NAMESPACE>|sample-cicd-pipeline|g' tekton/*.yaml
+sed -i 's|<APP_ROUTE_HOST>|smart-mobility-dashboard-sample-cicd-dev.apps.example.com|g' tekton/*.yaml
+sed -i 's|<GITEA_OWNER>|myuser|g' tekton/*.yaml
+
+# 変更をコミット
+git add -A
+git commit -m "Customize placeholders for environment"
+cd ..
+```
+
+### ソースリポの Containerfile 置換
+
+```bash
+cd sample-cicd-app
+sed -i 's|registry.access.redhat.com|<MIRROR_REGISTRY>|g' Containerfile
+
+# 依存ライブラリとあわせてコミット
+git add -A
+git commit -m "Add vendored dependencies and customize Containerfile"
+cd ..
+```
+
+## Step 3: Gitea にリポジトリを作成・push
 
 Gitea の Web UI から以下の2つの **空リポジトリ** を作成します（README の初期化はしない）:
 
-1. `**sample-cicd-app`** (ソースコード用)
-2. `**sample-cicd-app-manifests**` (マニフェスト用)
+1. **`sample-cicd-app`** (ソースコード用)
+2. **`sample-cicd-app-manifests`** (マニフェスト用)
 
 > **注意**: push 時に認証を求められます。Gitea のユーザー名と、前提条件で発行した **API トークン（パスワードの代わり）** を使用してください。
 
@@ -184,7 +225,7 @@ git push -u origin develop
 cd ..
 ```
 
-## Step 3: DevSpaces で開発環境を起動
+## Step 4: DevSpaces で開発環境を起動
 
 1. OpenShift Web Console から **DevSpaces** を開きます
 2. **「Create Workspace」** をクリック
@@ -209,40 +250,9 @@ cd ..
 
 ブラウザで DevSpaces のエンドポイント URL にアクセスすると、ダッシュボード UI が表示されます。
 
-## Step 4: YAML ファイルのカスタマイズ
-
-デプロイ前に、プレースホルダーを実際の値に置き換えます:
-
-
-| プレースホルダー            | 説明                     | 例                                                           |
-| ------------------- | ---------------------- | ----------------------------------------------------------- |
-| `<GITEA_HOST>`      | Gitea のホスト名            | `gitea.apps.example.com`                                    |
-| `<MIRROR_REGISTRY>` | ミラーレジストリのアドレス          | `registry.apps.example.com`                                 |
-| `<NAMESPACE>`       | Tekton リソースの namespace | `sample-cicd-pipeline`                                      |
-| `<APP_ROUTE_HOST>`  | dev 環境アプリの Route ホスト   | `smart-mobility-dashboard-sample-cicd-dev.apps.example.com` |
-| `<GITEA_OWNER>`     | Gitea のリポジトリオーナー       | `myuser`                                                    |
-
-
-```bash
-# マニフェストリポの一括置換
-cd sample-cicd-app-manifests
-sed -i 's|<GITEA_HOST>|gitea.apps.example.com|g' argocd/*.yaml tekton/*.yaml
-sed -i 's|<MIRROR_REGISTRY>|registry.apps.example.com|g' base/kustomization.yaml tekton/ci-pipeline.yaml
-sed -i 's|<NAMESPACE>|sample-cicd-pipeline|g' tekton/*.yaml
-sed -i 's|<APP_ROUTE_HOST>|smart-mobility-dashboard-sample-cicd-dev.apps.example.com|g' tekton/*.yaml
-sed -i 's|<GITEA_OWNER>|myuser|g' tekton/*.yaml
-cd ..
-```
-
-ソースリポの Containerfile 内のイメージパスも必要に応じて変更してください:
-
-```bash
-cd sample-cicd-app
-sed -i 's|registry.access.redhat.com|<MIRROR_REGISTRY>|g' Containerfile
-cd ..
-```
-
 ## Step 5: Tekton パイプラインのデプロイ
+
+> **注意**: Step 5〜8 は **ローカルマシン**（Step 1 で両リポジトリをクローンしたディレクトリ）で実行します。DevSpaces 内ではありません。
 
 CI パイプラインとスモークテストパイプラインはすべてマニフェストリポの `tekton/` にあります。
 

@@ -168,7 +168,6 @@ Gitea に push する **前に**、プレースホルダーを環境に合わせ
 | `<NAMESPACE>` | Tekton リソースの namespace | `sample-cicd-pipeline` |
 | `<APP_ROUTE_HOST>` | dev 環境アプリの Route ホスト | `smart-mobility-dashboard-sample-cicd-dev.apps.example.com` |
 | `<GITEA_OWNER>` | Gitea のリポジトリオーナー | `myuser` |
-| `<OWNER>` | Gitea のリポジトリオーナー（Git URL 用） | `myuser` |
 
 > **macOS の場合**: `sed -i` ではなく `sed -i ''` を使用してください（BSD sed と GNU sed の違い）。
 > 以下の例は Linux (GNU sed) 向けです。
@@ -181,7 +180,7 @@ sed -i 's|<GITEA_HOST>|gitea.apps.example.com|g' argocd/*.yaml tekton/*.yaml
 sed -i 's|<MIRROR_REGISTRY>|registry.apps.example.com|g' base/kustomization.yaml tekton/ci-pipeline.yaml
 sed -i 's|<NAMESPACE>|sample-cicd-pipeline|g' tekton/*.yaml
 sed -i 's|<APP_ROUTE_HOST>|smart-mobility-dashboard-sample-cicd-dev.apps.example.com|g' tekton/*.yaml
-sed -i 's|<GITEA_OWNER>|myuser|g' tekton/*.yaml
+sed -i 's|<GITEA_OWNER>|myuser|g' argocd/*.yaml tekton/*.yaml
 
 # 変更をコミット
 git add -A
@@ -193,7 +192,7 @@ cd ..
 
 ```bash
 cd sample-cicd-app
-sed -i 's|registry.access.redhat.com|<MIRROR_REGISTRY>|g' Containerfile
+sed -i 's|<MIRROR_REGISTRY>|registry.example.com|g' Containerfile
 
 # 依存ライブラリとあわせてコミット
 git add -A

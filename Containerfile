@@ -6,7 +6,7 @@
 # ===========================================================================
 
 # --- Builder stage ---
-FROM registry.access.redhat.com/ubi9/ubi:latest AS builder
+FROM <MIRROR_REGISTRY>/ubi9/ubi:latest AS builder
 
 RUN dnf install -y \
     gcc-c++ \
@@ -26,9 +26,9 @@ RUN mkdir build && cd build && \
     cmake --build . --parallel $(nproc)
 
 # --- Runtime stage ---
-FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
+FROM <MIRROR_REGISTRY>/ubi9/ubi-minimal:latest
 
-RUN microdnf install -y libstdc++ curl && microdnf clean all
+RUN microdnf install -y libstdc++ && microdnf clean all
 
 WORKDIR /app
 

@@ -130,11 +130,52 @@ oc get csv -n openshift-operators | grep devspaces
 
 エアギャップ環境では、以下のイメージがミラーレジストリに必要です:
 
+#### アプリケーション / パイプラインで明示的に使用するイメージ
 
-| イメージ                                                 | 用途                                          |
-| ---------------------------------------------------- | ------------------------------------------- |
-| `registry.redhat.io/devspaces/udi-rhel9:latest`      | Containerfile ビルドステージ / Tekton ビルド・テスト・マニフェスト更新 |
-| `registry.access.redhat.com/ubi9/ubi-minimal:latest` | Containerfile ランタイムステージ                     |
+| イメージ | 用途 |
+| --- | --- |
+| `registry.redhat.io/devspaces/udi-rhel9:latest` | Containerfile ビルドステージ / Tekton マニフェスト更新ステップ / `udi-cpp-dev` のベースイメージ (DevSpaces) |
+| `registry.access.redhat.com/ubi9/ubi-minimal:latest` | Containerfile ランタイムステージ / Tekton ヘルスチェック・スモークテスト・PR 作成ステップ |
+| `udi-cpp-dev:latest` （自前ビルド） | Tekton cmake-build-test ステップ / DevSpaces ワークスペース。`Containerfile.devspaces` から事前にビルドが必要 |
+
+#### パイプラインで暗黙的に必要なイメージ（OpenShift Pipelines 由来）
+
+以下のイメージはマニフェスト YAML には記載されていませんが、パイプライン実行時に OpenShift Pipelines が内部的に使用します。
+
+| イメージ | 用途 |
+| --- | --- |
+| `registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel9:latest` | `git-clone` Task が使用 |
+| `registry.redhat.io/rhel9/buildah:latest` | `buildah` Task が使用 |
+| `registry.redhat.io/openshift-pipelines/pipelines-triggers-eventlistenersink-rhel9:latest` | EventListener Pod が使用 |
+
+> **正確なイメージの確認方法:** 上記イメージのタグ/ダイジェストは OpenShift Pipelines のバージョンに依存します。実際の環境で以下のコマンドを実行して確認してください:
+>
+> ```bash
+> # git-clone Task のイメージ
+> oc get task git-clone -n openshift-pipelines -o jsonpath='{.spec.steps[*].image}'
+>
+> # buildah Task のイメージ
+> oc get task buildah -n openshift-pipelines -o jsonpath='{.spec.steps[*].image}'
+>
+> # EventListener Sink のイメージ（既存の EventListener がある場合）
+> oc get deploy -l app.kubernetes.io/managed-by=EventListener -A \
+>   -o jsonpath='{range .items[*]}{.spec.template.spec.containers[*].image}{"\n"}{end}'
+> ```
+
+#### イメージ不足時のトラブルシューティング
+
+オフライン環境でパイプライン実行時にイメージが見つからない場合、以下のようなエラーが発生します:
+
+- **PipelineRun / TaskRun が `ImagePullBackOff` で停止する:**
+  `oc get pods -n <NAMESPACE>` で Pod のステータスが `ImagePullBackOff` または `ErrImagePull` となります。`oc describe pod <POD名>` の Events セクションに `Failed to pull image "..."` というメッセージが表示されるので、そこに記載されたイメージをミラーレジストリに追加してください。
+
+- **EventListener Pod が起動しない:**
+  `oc get pods -n <NAMESPACE> -l eventlistener=ci-event-listener` で Pod が `ImagePullBackOff` の場合、EventListener Sink イメージのミラーリングが必要です。
+
+- **buildah ステップで Containerfile の FROM が失敗する:**
+  TaskRun のログに `error creating build container: ... manifest unknown` や `requested access to the resource is denied` と表示される場合、`Containerfile` の `FROM` で指定しているイメージ（`udi-rhel9`, `ubi9/ubi-minimal`）がミラーレジストリに存在しないことを意味します。
+
+上記いずれの場合も、エラーメッセージに含まれるイメージ名を確認し、ミラーレジストリへの登録を行ってください。
 
 
 ---
